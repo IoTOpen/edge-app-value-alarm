@@ -1,0 +1,16 @@
+ {
+   "category" : "notification",
+   "description" : "Sends a notification when any of the given functions value is over or under a specified value",
+   "name" : "Value Notification",
+   "public" : true,
+   "publisher" : {
+      "id" : x
+   },
+   "short_description" : "Value notification",
+   "source_url" : "https://github.com/IoTOpen/edge-app-value-notification",
+   "tags" : [
+      "standard",
+      "basic",
+      "notification"
+   ]
+}
