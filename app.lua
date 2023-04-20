@@ -90,6 +90,7 @@ function onStart()
 	end
 end
 
+local edgeTrigger = {}
 function sendNotificationIfArmed(topic, value, action)
 	local armed = false
 	local firing = ""
@@ -100,8 +101,8 @@ function sendNotificationIfArmed(topic, value, action)
 			func = topicFunction[top]
 		end
 	end
-
-	if armed and cfg.notification_output ~= nil then
+	if not armed then edgeTrigger[topic] = false end
+	if armed and not edgeTrigger[topic] and cfg.notification_output ~= nil then
 		local payloadData = {
 			value = value,
 			action = action,
@@ -115,5 +116,7 @@ function sendNotificationIfArmed(topic, value, action)
 			treshold = cfg.threshold
 		}
 		lynx.notify(cfg.notification_output, payloadData)
+		edgeTrigger[topic] = true
 	end
+	return armed
 end
