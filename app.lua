@@ -56,6 +56,7 @@ end
 
 local topicArmed = {}
 local topicFunction = {}
+local edgeTrigger = {}
 
 function handleTrigger(topic, payload, retained)
 	local data = json:decode(payload)
@@ -81,7 +82,7 @@ function onStart()
 		local triggerTopic = triggerFunction.meta.topic_read
 
 		-- Keep mapping between topic and function. In the case
-		-- of two functions haveing the same topic the last one
+		-- of two functions having the same topic the last one
 		-- in this loop will be used.
 		topicFunction[triggerTopic] = triggerFunction
 
@@ -90,33 +91,26 @@ function onStart()
 	end
 end
 
-local edgeTrigger = {}
 function sendNotificationIfArmed(topic, value, action)
-	local armed = false
-	local firing = ""
-	local unit = ""
-	for top, a in pairs(topicArmed) do
-		if a == true then
-			armed = true
-			func = topicFunction[top]
-		end
-	end
-	if not armed then edgeTrigger[topic] = false end
-	if armed and not edgeTrigger[topic] and cfg.notification_output ~= nil then
+    if cfg.notification_output == nil then return end
+
+    local func = topicFunction[topic]
+	local armed = topicArmed[topic]
+	local sent = edgeTrigger[topic]
+	if armed then
+	    if sent then return end
 		local payloadData = {
 			value = value,
 			action = action,
 			firing = func.meta.name,
 			unit = func.meta.unit,
 			note = func.meta.note,
-			-- Instead of the above, the whole function could be added.
-			-- Not sure if the user wants to expose the whole function.
-			--
-			-- func = func, -- Find no way to use resrved word function
-			treshold = cfg.threshold
+			func = func,
+			threshold = cfg.threshold
 		}
 		lynx.notify(cfg.notification_output, payloadData)
 		edgeTrigger[topic] = true
+	else
+	    edgeTrigger[topic] = false
 	end
-	return armed
 end
