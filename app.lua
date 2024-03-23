@@ -30,6 +30,21 @@ local function matchCriteria(fn, criteria)
     return true
 end
 
+function findDevice(criteria)
+    devices = lynx.getDevices()
+    if math.type(criteria) ~= nil then
+        for _, dev in ipairs(devices) do
+            if dev.id == criteria then return dev end
+        end
+    elseif type(criteria) == 'table' then
+        for _, dev in ipairs(devices) do
+            if matchCriteria(dev, criteria) then return dev end
+        end
+    end
+    return nil
+end
+
+
 function findFunction(criteria)
     if math.type(criteria) ~= nil then
         for _, fn in ipairs(functions) do
@@ -95,22 +110,25 @@ function sendNotificationIfArmed(topic, value, action)
     if cfg.notification_output == nil then return end
 
     local func = topicFunction[topic]
-	local armed = topicArmed[topic]
-	local sent = edgeTrigger[topic]
-	if armed then
-	    if sent then return end
-		local payloadData = {
-			value = value,
-			action = action,
-			firing = func.meta.name,
-			unit = func.meta.unit,
-			note = func.meta.note,
-			func = func,
-			threshold = cfg.threshold
-		}
-		lynx.notify(cfg.notification_output, payloadData)
-		edgeTrigger[topic] = true
-	else
-	    edgeTrigger[topic] = false
-	end
+    print(json:encode(func.meta.device_id))
+    local dev = findDevice(tonumber(func.meta.device_id))
+    local armed = topicArmed[topic]
+    local sent = edgeTrigger[topic]
+    if armed then
+        if sent then return end
+	    local payloadData = {
+		value = value,
+		action = action,
+		firing = func.meta.name,
+		unit = func.meta.unit,
+		note = func.meta.note,
+		func = func,
+		device = dev,
+		threshold = cfg.threshold
+	    } 
+	lynx.notify(cfg.notification_output, payloadData)
+	edgeTrigger[topic] = true
+    else
+        edgeTrigger[topic] = false
+    end
 end
